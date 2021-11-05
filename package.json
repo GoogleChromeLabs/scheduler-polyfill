@@ -1,0 +1,54 @@
+{
+  "name": "scheduler-polyfill",
+  "version": "1.0.0",
+  "description": "Polyfill of experimental window.scheduler API",
+  "main": "./dist/scheduler-polyfill.js",
+  "module": "./dist/scheduler-polyfill.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "microbundle --raw -f iife src/polyfill.js",
+    "lint": "eslint src test",
+    "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
+  },
+  "browserslist": [
+    "supports es6-module"
+  ],
+  "author": "shaseley@chromium.org",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^7.32.0",
+    "eslint-config-google": "^0.14.0",
+    "karma": "^5.2.3",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-mocha": "^2.0.1",
+    "microbundle": "^0.14.1",
+    "mocha": "^8.2.1"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "browser": true,
+      "mocha": true,
+      "es6": true
+    },
+    "globals": {
+      "expect": true,
+      "assert": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "google"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "module"
+    }
+  }
+}
