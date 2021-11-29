@@ -1,7 +1,7 @@
 {
   "name": "scheduler-polyfill",
   "version": "1.0.0",
-  "description": "Polyfill of experimental window.scheduler API",
+  "description": "Polyfill of self.scheduler API",
   "main": "./dist/scheduler-polyfill.js",
   "module": "./dist/scheduler-polyfill.js",
   "directories": {
@@ -15,11 +15,26 @@
     "lint": "eslint src test",
     "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
   },
+  "homepage": "https://github.com/GoogleChromeLabs/scheduler-polyfill",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GoogleChromeLabs/scheduler-polyfill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GoogleChromeLabs/scheduler-polyfill/issues"
+  },
   "browserslist": [
     "supports es6-module"
   ],
-  "author": "shaseley@chromium.org",
+  "author": "The Chromium Authors",
   "license": "Apache-2.0",
+  "keywords": [
+    "scheduler",
+    "scheduling",
+    "postTask",
+    "TaskController",
+    "TaskSignal"
+  ],
   "devDependencies": {
     "chai": "^4.2.0",
     "eslint": "^7.32.0",
