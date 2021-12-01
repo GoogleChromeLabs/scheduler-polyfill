@@ -13,15 +13,29 @@ The implementation uses a combination of `setTimeout`, `MessageChannel`, and
 `requestIdleCallback` to implement task scheduling, falling back to `setTimeout`
 when other APIs are not available.
 
-## Usage
-
-### Requirements
+## Requirements
 
 A browser that supports ES6 is required for this polyfill.
 
-### Local Builds
+## Usage
 
-#### Download and Build the Polyfill
+**Include via unpkg:**
+
+```html
+<script src="https://unpkg.com/scheduler-polyfill"></script>
+```
+
+**Using with npm and a bundler**:
+
+```console
+npm install scheduler-polyfill
+```
+
+```js
+import 'scheduler-polyfill';
+```
+
+**Building from source:**
 
 ```console
 git clone https://github.com/GoogleChromeLabs/scheduler-polyfill
@@ -30,11 +44,6 @@ npm i
 npm test        # Tests should pass
 npm run build   # Outputs minified polyfill to dist/
 ```
-
-#### Usage in Browsers
-
-The following will add `self.scheduler` if it does not exist, along with the
-`TaskController` and `TaskPriorityChangeEvent` classes.
 
 ```html
 <script src="/path_to_polyfill/scheduler-polyfill.js"></script>
