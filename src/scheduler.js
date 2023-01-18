@@ -133,7 +133,7 @@ class Scheduler {
       abortCallback: null,
 
       onTaskCompleted: function() {
-        if (!this.options.signal || this.abortCallback) return;
+        if (!this.options.signal || !this.abortCallback) return;
         this.options.signal.removeEventListener('abort', this.abortCallback);
         this.abortCallback = null;
       },
