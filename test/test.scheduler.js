@@ -375,4 +375,26 @@ describe('Scheduler', function() {
       }
     });
   });
+
+  it('should use the abort reason.', async function() {
+    const scheduler = new Scheduler();
+    let controller = new TaskController();
+    controller.abort(100);
+    try {
+      await scheduler.postTask(() => {}, {signal: controller.signal});
+      assert.okay(false);
+    } catch (e) {
+      expect(e).to.equal(100);
+    }
+
+    controller = new TaskController();
+    const p = scheduler.postTask(() => {}, {signal: controller.signal});
+    controller.abort(200);
+    try {
+      await p;
+      assert.okay(false);
+    } catch (e) {
+      expect(e).to.equal(200);
+    }
+  });
 });
