@@ -17,6 +17,7 @@
 import {Scheduler} from '../src/scheduler.js';
 import {SCHEDULER_PRIORITIES} from '../src/scheduler-priorities.js';
 import {TaskController} from '../src/task-controller.js';
+import {yieldCommonTests} from './test.yield.common.js';
 
 describe('Scheduler', function() {
   describe('#postTask()', function() {
@@ -396,5 +397,9 @@ describe('Scheduler', function() {
     } catch (e) {
       expect(e).to.equal(200);
     }
+  });
+
+  describe('#yield()', function() {
+    yieldCommonTests(new Scheduler(), TaskController, false);
   });
 });

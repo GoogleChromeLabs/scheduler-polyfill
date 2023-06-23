@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Google LLC
+ * Copyright 2023 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-import {Scheduler} from './scheduler.js';
-import {TaskController, TaskPriorityChangeEvent} from './task-controller.js';
-import {schedulerYield} from './yield.js';
+import {schedulerYield} from '../src/yield.js';
+import {yieldCommonTests} from './test.yield.common.js';
 
-if (typeof self.scheduler === 'undefined') {
-  self.scheduler = new Scheduler();
-  self.TaskController = TaskController;
-  self.TaskPriorityChangeEvent = TaskPriorityChangeEvent;
-} else if (!self.scheduler.yield) {
+describe('shedulerYield', function() {
   self.scheduler.yield = schedulerYield;
-}
+  yieldCommonTests(self.scheduler, self.TaskController, true);
+});

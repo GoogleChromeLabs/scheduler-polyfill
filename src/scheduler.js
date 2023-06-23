@@ -28,11 +28,13 @@ class Scheduler {
    */
   constructor() {
     /**
-     * @const {Object<string, !TaskQueue>}
+     * @const {Object<string, !TaskQueue[]>}
+     *
+     * Continuation and task queue for each priority, in that order.
      */
     this.queues_ = {};
     SCHEDULER_PRIORITIES.forEach((priority) => {
-      this.queues_[priority] = new TaskQueue();
+      this.queues_[priority] = [new TaskQueue(), new TaskQueue()];
     });
 
     /*
@@ -60,19 +62,47 @@ class Scheduler {
   }
 
   /**
+   * Returns a promise that is resolved in a new task. The resulting promise is
+   * rejected if the associated signal is aborted.
+   *
+   * @param {{signal: AbortSignal, priorty: string}} options
+   * @return {!Promise<*>}
+   */
+  yield(options) {
+    options = Object.assign({}, options);
+    // Inheritance is not supported. Use default options instead.
+    if (options.signal && options.signal == 'inherit') {
+      delete options.signal;
+    }
+    if (options.priority && options.priority == 'inherit') {
+      options.priority = 'user-visible';
+    }
+    return this.postTaskOrContinuation_(() => {}, options, true);
+  }
+
+  /**
    * Schedules `callback` to be run asynchronously, returning a promise that is
    * resolved with the callback's result when it finishes running. The resulting
    * promise is rejected if the callback throws an exception, or if the
    * associated signal is aborted.
-   *
-   * Note: we aren't implementing argument passing since that will likely be
-   * removed from the API.
    *
    * @param {function(): *} callback
    * @param {{signal: AbortSignal, priorty: string, delay: number}} options
    * @return {!Promise<*>}
    */
   postTask(callback, options) {
+    return this.postTaskOrContinuation_(callback, options, false);
+  }
+
+  /**
+   * Common scheduling logic for postTask and yield.
+   *
+   * @param {function(): *} callback
+   * @param {{signal: AbortSignal, priorty: string, delay: number}} options
+   * @param {boolean} isContinuation
+   * @return {!Promise<*>}
+   */
+  postTaskOrContinuation_(callback, options, isContinuation) {
     // Make a copy since we modify some of the options.
     options = Object.assign({}, options);
 
@@ -153,6 +183,8 @@ class Scheduler {
       isAborted: function() {
         return this.options.signal && this.options.signal.aborted;
       },
+
+      isContinuation,
     };
 
     const resultPromise = new Promise((resolve, reject) => {
@@ -231,12 +263,15 @@ class Scheduler {
     }
     if (oldPriority === signal.priority) return;
 
-    const sourceQueue = this.queues_[oldPriority];
-    const destinationQueue = this.queues_[signal.priority];
+    // Change priority for both continuations and tasks.
+    for (let i = 0; i < 2; i++) {
+      const sourceQueue = this.queues_[oldPriority][i];
+      const destinationQueue = this.queues_[signal.priority][i];
 
-    destinationQueue.merge(sourceQueue, (task) => {
-      return task.options.signal === signal;
-    });
+      destinationQueue.merge(sourceQueue, (task) => {
+        return task.options.signal === signal;
+      });
+    }
 
     this.signals_.set(signal, signal.priority);
   }
@@ -255,7 +290,7 @@ class Scheduler {
    * Schedule the next scheduler callback if there are any pending tasks.
    */
   scheduleHostCallbackIfNeeded_() {
-    const priority = this.nextTaskPriority_();
+    const {priority} = this.nextTaskPriority_();
     if (priority == null) return;
 
     // We might need to upgrade to a non-idle callback if a higher priority task
@@ -314,8 +349,7 @@ class Scheduler {
         this.signals_.set(signal, signal.priority);
       }
     }
-
-    this.queues_[priority].push(task);
+    this.queues_[priority][task.isContinuation ? 0 : 1].push(task);
   }
 
   /**
@@ -331,13 +365,13 @@ class Scheduler {
     do {
       // TODO(shaseley): This can potentially run a background task in a
       // non-background task host callback.
-      const priority = this.nextTaskPriority_();
+      const {priority, type} = this.nextTaskPriority_();
       // No tasks to run.
       if (priority == null) return;
 
       // Note: `task` will only be null if the queue is empty, which should not
       // be the case if we found the priority of the next task to run.
-      task = this.queues_[priority].takeNextTask();
+      task = this.queues_[priority][type].takeNextTask();
     } while (task.isAborted());
 
     try {
@@ -351,17 +385,20 @@ class Scheduler {
   }
 
   /**
-   * Get the priority of the next task to run.
+   * Get the priority and type of the next task or continuation to run.
    * @private
-   * @return {?string} Returns the priority of the next task to run, or null if
-   *    all queues are empty.
+   * @return {{priority: ?string, type: number}} Returns the priority and type
+   *    of the next continuation or task to run, or null if all queues are
+   *    empty.
    */
   nextTaskPriority_() {
     for (let i = 0; i < SCHEDULER_PRIORITIES.length; i++) {
       const priority = SCHEDULER_PRIORITIES[i];
-      if (!this.queues_[priority].isEmpty()) return priority;
+      for (let type = 0; type < 2; type++) {
+        if (!this.queues_[priority][type].isEmpty()) return {priority, type};
+      }
     }
-    return null;
+    return {priority: null, type: 0};
   }
 }
 
