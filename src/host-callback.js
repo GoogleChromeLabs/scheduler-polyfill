@@ -200,7 +200,6 @@ class HostCallback {
     // the appropriate priority when the callback runs. If the delay <= 0 and
     // MessageChannel is available, we use postMessage below.
     if (delay && delay > 0) {
-      if (!delay) delay = 0;
       this.callbackType_ = CallbackType.SET_TIMEOUT;
       this.handle_ = setTimeout(() => {
         this.runCallback_();
