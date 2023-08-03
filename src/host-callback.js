@@ -158,6 +158,14 @@ class HostCallback {
   }
 
   /**
+   * Returns true iff this task was scheduled with MessageChannel.
+   * @return {boolean}
+   */
+  isMessageChannelCallback() {
+    return this.callbackType_ === CallbackType.POST_MESSAGE;
+  }
+
+  /**
    * Cancel the host callback, and if possible, cancel the underlying API call.
    */
   cancel() {
@@ -191,7 +199,7 @@ class HostCallback {
     // For the delay case, our only option is setTimeout. This gets queued at
     // the appropriate priority when the callback runs. If the delay <= 0 and
     // MessageChannel is available, we use postMessage below.
-    if ((delay && delay > 0) || typeof MessageChannel !== 'function') {
+    if (delay && delay > 0) {
       if (!delay) delay = 0;
       this.callbackType_ = CallbackType.SET_TIMEOUT;
       this.handle_ = setTimeout(() => {
@@ -207,12 +215,16 @@ class HostCallback {
     }
 
     if (priority === 'background' &&
-        typeof requestIdleCallback === 'function') {
+      typeof requestIdleCallback === 'function') {
       this.handle_ = requestIdleCallback(() => {
         this.runCallback_();
       });
       this.callbackType_ = CallbackType.REQUEST_IDLE_CALLBACK;
-    } else {
+      return;
+    }
+
+    // Use MessageChannel if avaliable
+    if (typeof MessageChannel === 'function') {
       // TODO: Consider using setTimeout in the background so tasks are
       // throttled. One caveat here is that requestIdleCallback may not be
       // throttled.
@@ -220,7 +232,16 @@ class HostCallback {
         this.runCallback_();
       });
       this.callbackType_ = CallbackType.POST_MESSAGE;
+      return;
     }
+
+    // Some JS environments may not support MessageChannel.
+    // This makes setTimeout the only option
+
+    this.callbackType_ = CallbackType.SET_TIMEOUT;
+    this.handle_ = setTimeout(() => {
+      this.runCallback_();
+    }, delay);
   }
 
   /** Run the associated callback. */

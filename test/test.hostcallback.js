@@ -27,7 +27,7 @@ describe('HostCallback', function() {
     testConfigs.forEach((test) => {
       SCHEDULER_PRIORITIES.forEach((priority) => {
         let description =
-            'should schedule and run ' + priority + ' callbacks in order';
+          'should schedule and run ' + priority + ' callbacks in order';
         description += test.delay > 0 ? ' (with delay)' : ' (without delay)';
 
         it(description, function(done) {
@@ -55,20 +55,48 @@ describe('HostCallback', function() {
     it('should return true for background tasks if requestIdleCallback exists',
         function() {
           const hasRequestIdleCallback =
-             typeof requestIdleCallback === 'function';
-          const hostCallback = new HostCallback(() => {}, 'background');
+          typeof requestIdleCallback === 'function';
+          const hostCallback = new HostCallback(() => { }, 'background');
           expect(hostCallback.isIdleCallback()).to.equal(
               hasRequestIdleCallback);
         });
 
     it('should return false for user-visible and user-blocking tasks',
         function() {
-          let hostCallback = new HostCallback(() => {}, 'user-blocking');
+          let hostCallback = new HostCallback(() => { }, 'user-blocking');
           expect(hostCallback.isIdleCallback()).to.equal(false);
 
-          hostCallback = new HostCallback(() => {}, 'user-visible');
+          hostCallback = new HostCallback(() => { }, 'user-visible');
           expect(hostCallback.isIdleCallback()).to.equal(false);
         });
+  });
+
+
+  describe('#isMessageChannelCallback()', function() {
+    let originalMessageChannel = null;
+
+    beforeEach(function() {
+      originalMessageChannel = window.MessageChannel;
+    });
+
+    afterEach(function() {
+      window.MessageChannel = originalMessageChannel;
+    });
+
+    ['user-visible', 'user-blocking'].forEach((priority) => {
+      it(`should use Message channel when avaliable for "${priority}"`,
+          function() {
+            const hostCallback = new HostCallback(() => { }, priority);
+            expect(hostCallback.isMessageChannelCallback()).to.equal(true);
+          });
+
+      it(`should use Message channel when avaliable for "${priority}"`,
+          function() {
+            window.MessageChannel = null;
+            const hostCallback = new HostCallback(() => { }, priority);
+            expect(hostCallback.isMessageChannelCallback()).to.equal(false);
+          });
+    });
   });
 
 
@@ -81,7 +109,7 @@ describe('HostCallback', function() {
     testConfigs.forEach((test) => {
       SCHEDULER_PRIORITIES.forEach((priority) => {
         let description =
-            'should prevent ' + priority + ' callbacks from running';
+          'should prevent ' + priority + ' callbacks from running';
         description += test.delay > 0 ? ' (with delay)' : ' (without delay)';
 
         it(description, function(done) {
