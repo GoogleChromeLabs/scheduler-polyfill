@@ -55,7 +55,7 @@ describe('HostCallback', function() {
     it('should return true for background tasks if requestIdleCallback exists',
         function() {
           const hasRequestIdleCallback =
-          typeof requestIdleCallback === 'function';
+            typeof requestIdleCallback === 'function';
           const hostCallback = new HostCallback(() => { }, 'background');
           expect(hostCallback.isIdleCallback()).to.equal(
               hasRequestIdleCallback);
@@ -90,7 +90,7 @@ describe('HostCallback', function() {
             expect(hostCallback.isMessageChannelCallback()).to.equal(true);
           });
 
-      it(`should use Message channel when avaliable for "${priority}"`,
+      it(`should not use Message channel when not avaliable for "${priority}"`,
           function() {
             window.MessageChannel = null;
             const hostCallback = new HostCallback(() => { }, priority);

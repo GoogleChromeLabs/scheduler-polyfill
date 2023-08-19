@@ -215,28 +215,27 @@ class HostCallback {
 
     if (priority === 'background' &&
       typeof requestIdleCallback === 'function') {
+      this.callbackType_ = CallbackType.REQUEST_IDLE_CALLBACK;
       this.handle_ = requestIdleCallback(() => {
         this.runCallback_();
       });
-      this.callbackType_ = CallbackType.REQUEST_IDLE_CALLBACK;
       return;
     }
 
     // Use MessageChannel if avaliable
     if (typeof MessageChannel === 'function') {
+      this.callbackType_ = CallbackType.POST_MESSAGE;
       // TODO: Consider using setTimeout in the background so tasks are
       // throttled. One caveat here is that requestIdleCallback may not be
       // throttled.
       this.handle_ = getPostMessageCallbackManager().queueCallback(() => {
         this.runCallback_();
       });
-      this.callbackType_ = CallbackType.POST_MESSAGE;
       return;
     }
 
     // Some JS environments may not support MessageChannel.
     // This makes setTimeout the only option
-
     this.callbackType_ = CallbackType.SET_TIMEOUT;
     this.handle_ = setTimeout(() => {
       this.runCallback_();
