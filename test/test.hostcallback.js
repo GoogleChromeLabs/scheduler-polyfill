@@ -72,6 +72,34 @@ describe('HostCallback', function() {
   });
 
 
+  describe('#isMessageChannelCallback()', function() {
+    let originalMessageChannel = null;
+
+    beforeEach(function() {
+      originalMessageChannel = window.MessageChannel;
+    });
+
+    afterEach(function() {
+      window.MessageChannel = originalMessageChannel;
+    });
+
+    ['user-visible', 'user-blocking'].forEach((priority) => {
+      it(`should use Message channel when avaliable for "${priority}"`,
+          function() {
+            const hostCallback = new HostCallback(() => {}, priority);
+            expect(hostCallback.isMessageChannelCallback()).to.equal(true);
+          });
+
+      it(`should not use Message channel when not avaliable for "${priority}"`,
+          function() {
+            window.MessageChannel = null;
+            const hostCallback = new HostCallback(() => {}, priority);
+            expect(hostCallback.isMessageChannelCallback()).to.equal(false);
+          });
+    });
+  });
+
+
   describe('#cancel()', function() {
     const testConfigs = [
       {delay: 0},
