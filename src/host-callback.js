@@ -214,7 +214,7 @@ class HostCallback {
     }
 
     if (priority === 'background' &&
-      typeof requestIdleCallback === 'function') {
+        typeof requestIdleCallback === 'function') {
       this.callbackType_ = CallbackType.REQUEST_IDLE_CALLBACK;
       this.handle_ = requestIdleCallback(() => {
         this.runCallback_();
@@ -235,7 +235,7 @@ class HostCallback {
     }
 
     // Some JS environments may not support MessageChannel.
-    // This makes setTimeout the only option
+    // This makes setTimeout the only option.
     this.callbackType_ = CallbackType.SET_TIMEOUT;
     this.handle_ = setTimeout(() => {
       this.runCallback_();
