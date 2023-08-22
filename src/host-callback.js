@@ -222,7 +222,7 @@ class HostCallback {
       return;
     }
 
-    // Use MessageChannel if avaliable
+    // Use MessageChannel if avaliable.
     if (typeof MessageChannel === 'function') {
       this.callbackType_ = CallbackType.POST_MESSAGE;
       // TODO: Consider using setTimeout in the background so tasks are
@@ -239,7 +239,7 @@ class HostCallback {
     this.callbackType_ = CallbackType.SET_TIMEOUT;
     this.handle_ = setTimeout(() => {
       this.runCallback_();
-    }, delay);
+    });
   }
 
   /** Run the associated callback. */
