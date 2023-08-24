@@ -31,7 +31,7 @@ non-`scheduler` tasks:
 
 ## `scheduler.yield()`
 
-> `scheduler.yield()` is available in version 1.2 of the polyfill, published
+> `scheduler.yield()` is available in version 1.3 of the polyfill, published
 under the `next` tag on npm. See the [Usage section](#usage) for installation
 instructions.
 
@@ -70,7 +70,7 @@ A browser that supports ES6 is required for this polyfill.
 
 ### Include via unpkg
 
-**Use the next version of the polyfill, which includes `scheduler.yield()``:**
+**Use the next version of the polyfill, which includes `scheduler.yield()`:**
 ```html
 <script src="https://unpkg.com/scheduler-polyfill@next"></script>
 ```
