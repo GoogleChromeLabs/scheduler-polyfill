@@ -31,6 +31,10 @@ non-`scheduler` tasks:
 
 ## `scheduler.yield()`
 
+> `scheduler.yield()` is available in version 1.2 of the polyfill, published
+under the `next` tag on npm. See the [Usage section](#usage) for installation
+instructions.
+
 The polyfill supports [`scheduler.yield()`](https://chromestatus.com/feature/6266249336586240),
 which is currently in [Origin Trial in
 Chrome](https://developer.chrome.com/origintrials/#/view_trial/836543630784069633).
@@ -64,23 +68,38 @@ A browser that supports ES6 is required for this polyfill.
 
 ## Usage
 
-**Include via unpkg:**
+### Include via unpkg
 
+**Use the next version of the polyfill, which includes `scheduler.yield()``:**
+```html
+<script src="https://unpkg.com/scheduler-polyfill@next"></script>
+```
+
+**or use the current stable release of the polyfill:**
 ```html
 <script src="https://unpkg.com/scheduler-polyfill"></script>
 ```
 
-**Using with npm and a bundler**:
+### Include via npm and a bundler
 
 ```console
+npm install scheduler-polyfill@next
+```
+
+**Or use the stable release (without `scheduler.yield()`):**
+
+```sh
 npm install scheduler-polyfill
 ```
+
+Import to populate the task scheduling global variables, if not already
+available in the executing browser:
 
 ```js
 import 'scheduler-polyfill';
 ```
 
-**Building from source:**
+### Building from source
 
 ```console
 git clone https://github.com/GoogleChromeLabs/scheduler-polyfill
