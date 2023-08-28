@@ -53,7 +53,7 @@ export type SchedulerYieldOptions = {
  * [MDN Reference](https://developer.mozilla.org/docs/Web/API/TaskController/TaskController#options)
  */
 type TaskControllerOptions = {
-  /** The {@link TaskPriority} of the signal associated with this {@link TaskController}. One of `"user-blocking"`, `"user-visible"`, or `"background"`. */
+  /** The {@link TaskPriority} of the signal associated with this {@link TaskController}. One of `"user-blocking"`, `"user-visible"`, or `"background"`. The default is `"user-visible"`. */
   priority?: TaskPriority;
 }
 
@@ -104,7 +104,7 @@ declare global {
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/TaskPriorityChangeEvent)
    */
   class TaskPriorityChangeEvent extends Event {
-    constructor(type: string, init?: TaskPriorityChangeEventInit);
+    constructor(type: string, init: TaskPriorityChangeEventInit);
     /**
      * The priority of the corresponding {@link TaskSignal} _before_ this prioritychange event.
      *
