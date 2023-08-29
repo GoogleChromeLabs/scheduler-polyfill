@@ -29,7 +29,7 @@ export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
 export type SchedulerPostTaskOptions = {
   /** The immutable {@link TaskPriority} of the task. One of `"user-blocking"`, `"user-visible"`, or `"background"`. If set, this priority is used for the lifetime of the task and priority set on the `signal` is ignored. */
   priority?: TaskPriority;
-  /** An {@link AbortSignal} or {@link TaskSignal} that can be used to abort or re-prioritize the task (from its associated controller). */
+  /** An {@link AbortSignal} or {@link TaskSignal} that can be used to abort or re-prioritize the task (from its associated controller). The signal's priority is ignored if `priority` is set. */
   signal?: AbortSignal | TaskSignal;
   /** The minimum amount of time after which the task will be added to the scheduler queue, in whole milliseconds. The actual delay may be higher than specified, but will not be less. The default delay is 0. */
   delay?: number;
@@ -41,9 +41,9 @@ export type SchedulerPostTaskOptions = {
  * [Explainer reference](https://github.com/WICG/scheduling-apis/blob/main/explainers/yield-and-continuation.md#controlling-continuation-priority-and-abort-behavior)
  */
 export type SchedulerYieldOptions = {
-  /** The priority for the continuation, either a {@link TaskPriority} (`"user-blocking"`, `"user-visible"`, or `"background"`) or `"inherit"` to infer the priority from the current context. */
+  /** The priority for the continuation, either a {@link TaskPriority} (`"user-blocking"`, `"user-visible"`, or `"background"`) or `"inherit"` to infer the priority from the current context. If set, this priority is used for the lifetime of the task and priority set on the `signal` is ignored. */
   priority?: TaskPriority | 'inherit';
-  /** An {@link AbortSignal} or {@link TaskSignal} that can be used to abort or re-prioritize the task (from its associated controller), or `"inherit"` to inherit the current task's signal. */
+  /** An {@link AbortSignal} or {@link TaskSignal} that can be used to abort or re-prioritize the task (from its associated controller), or `"inherit"` to inherit the current task's signal. The signal's priority is ignored if `priority` is set. */
   signal?: AbortSignal | TaskSignal | 'inherit';
 };
 
@@ -68,7 +68,7 @@ declare global {
   interface Scheduler {
     /**
      * Adds a task to the scheduler as a callback, optionally specifying a priority, delay, and/or a signal for aborting the task.
-     * @param callback An callback function that implements the task. The return value of the callback is used to resolve the promise returned by this function.
+     * @param callback A callback function that implements the task. The return value of the callback is used to resolve the promise returned by this function.
      * @param options {@link SchedulerPostTaskOptions} options.
      *
      * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Scheduler/postTask)
