@@ -4,6 +4,7 @@
   "description": "Polyfill of self.scheduler API",
   "main": "./dist/scheduler-polyfill.js",
   "module": "./dist/scheduler-polyfill.js",
+  "types": "./dist/scheduler.d.ts",
   "directories": {
     "doc": "docs"
   },
@@ -11,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "microbundle --raw -f iife src/polyfill.js",
+    "build": "microbundle --raw --no-generateTypes -f iife src/polyfill.js && cp types/scheduler.d.ts dist/",
     "lint": "eslint src test",
     "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
   },
