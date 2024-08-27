@@ -17,8 +17,8 @@
 import {Scheduler} from './scheduler.js';
 import {TaskController, TaskPriorityChangeEvent} from './task-controller.js';
 
-if (typeof self.scheduler === 'undefined') {
-  self.scheduler = new Scheduler();
-  self.TaskController = TaskController;
-  self.TaskPriorityChangeEvent = TaskPriorityChangeEvent;
+if (typeof globalThis.scheduler === 'undefined') {
+  globalThis.scheduler = new Scheduler();
+  globalThis.TaskController = TaskController;
+  globalThis.TaskPriorityChangeEvent = TaskPriorityChangeEvent;
 }
