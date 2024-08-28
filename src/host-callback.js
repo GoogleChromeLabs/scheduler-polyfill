@@ -34,15 +34,27 @@ class PostMessageCallbackMananger {
 
     /**
      * @private
+     * @const {boolean}
+     */
+    this.refable_ = typeof this.channel_.port1.ref === 'function';
+
+    /**
+     * @private
+     * @const {MessagePort}
+     */
+    this.receivePort_ = this.channel_.port1;
+
+    /**
+     * @private
      * @const {MessagePort}
      */
     this.sendPort_ = this.channel_.port2;
 
     /**
      * @private
-     * @const {!Object<number, function(): undefined>}
+     * @const {!Map<number, function(): undefined>}
      */
-    this.messages_ = {};
+    this.messages_ = new Map();
 
     /**
      * @private
@@ -50,7 +62,8 @@ class PostMessageCallbackMananger {
      */
     this.nextMessageHandle_ = 1;
 
-    this.channel_.port1.onmessage = (e) => this.onMessageReceived_(e);
+    this.receivePort_.onmessage = (e) => this.onMessageReceived_(e);
+    if (this.refable_) this.receivePort_.unref();
   }
 
   /**
@@ -62,16 +75,31 @@ class PostMessageCallbackMananger {
     // with each message, which is used to look up the callback when the message
     // is received.
     const handle = this.nextMessageHandle_++;
-    this.messages_[handle] = callback;
+    this.messages_.set(handle, callback);
     this.sendPort_.postMessage(handle);
+    // On relevant environments, ref the receive port to hold the event loop
+    // open while tasks are queued.
+    if (this.refable_) this.receivePort_.ref();
     return handle;
+  }
+
+  /**
+   * Release a cancellation handle.
+   * @private
+   * @param {number} handle The handle returned when the callback was queued.
+   */
+  releaseHandle_(handle) {
+    this.messages_.delete(handle);
+    // When the queue is empty, unref the receive port on relevant environments
+    // to prevent holding the event loop open when nothing is pending.
+    if (this.refable_ && !this.messages_.size) this.receivePort_.unref();
   }
 
   /**
    * @param {number} handle The handle returned when the callback was queued.
    */
   cancelCallback(handle) {
-    delete this.messages_[handle];
+    this.releaseHandle_(handle);
   }
 
   /**
@@ -82,9 +110,9 @@ class PostMessageCallbackMananger {
   onMessageReceived_(e) {
     const handle = e.data;
     // The handle will have been removed if the callback was canceled.
-    if (!(handle in this.messages_)) return;
-    const callback = this.messages_[handle];
-    delete this.messages_[handle];
+    if (!this.messages_.has(handle)) return;
+    const callback = this.messages_.get(handle);
+    this.releaseHandle_(handle);
     callback();
   }
 }
