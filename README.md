@@ -1,9 +1,8 @@
 # Scheduler Polyfill
 
 This is a polyfill for the [Prioritized Task Scheduling
-API](https://wicg.github.io/scheduling-apis/). Documentation on the API shape
-along with examples can be found in the
-[explainer](https://github.com/WICG/scheduling-apis/blob/main/explainers/prioritized-post-task.md#api-shape).
+API](https://wicg.github.io/scheduling-apis/). Documentation can be found on
+[MDN](https://developer.mozilla.org/en-US/docs/Web/API/Scheduler).
 
 The polyfill includes implementations of `Scheduler`, exposed through
 `self.scheduler`, as well as `TaskController` and `TaskPriorityChangeEvent`
@@ -31,42 +30,28 @@ non-`scheduler` tasks:
 
 ## `scheduler.yield()`
 
-> `scheduler.yield()` is available in version 1.3 of the polyfill, published
-under the `next` tag on npm. See the [Usage section](#usage) for installation
-instructions.
+The polyfill does not support [priority or signal
+inheritance](https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/yield#inheriting_task_priorities),
+so all continuations are scheduled with `"user-visible"` continuation priority.
+The scheduling behavior of this depends on whether the browser supports
+`scheduler.postTask()` (i.e. older Chrome versions):
+  * For browsers that support `scheduler.postTask()`, `scheduler.yield()` is
+    polyfilled with `"user-blocking"` `scheduler.postTask()` tasks. This means
+    they typically have a higher event loop priority than other tasks
+    (consistent with `yield()`), but they can be interleaved with other
+    `"user-blocking"` tasks.
 
-The polyfill supports [`scheduler.yield()`](https://chromestatus.com/feature/6266249336586240),
-which is currently in [Origin Trial in
-Chrome](https://developer.chrome.com/origintrials/#/view_trial/836543630784069633).
-
-[Signal and priority
-inheritance](https://github.com/WICG/scheduling-apis/blob/main/explainers/yield-and-continuation.md#controlling-continuation-priority-and-abort-behavior)
-is not currently supported in the polyfill, and using the `"inherit"` option
-will result in the default behavior, i.e. the continuation will not be aborted
-and will run at default priority.
-
-The scheduling behavior of the polyfill depends on whether the browser supports
-`scheduler.postTask()` (i.e. older Chrome versions). If it does, then `yield()`
-is polyfilled with `postTask()`, with the following behavior:
-
- - `"user-visible"` continuations run as `"user-blocking"` `scheduler` tasks.
-   This means they typically have a higher event loop priority than other tasks
-   (consistent with `yield()`), but they can be interleaved with other
-   `"user-blocking"` tasks. The same goes for `"user-blocking"` continuations.
- - `"background"` continuations are scheduled as `"background"` tasks, which
-   means they have lowered event loop priority but don't go ahead of other
-   `"background"` tasks, so they can be interleaved.
-
-On browsers that don't support `scheduler.postTask()`, the same event loop
-prioritization as the `postTask()` polyfill applies (see above), but
-continuations have higher priority than tasks of the same priority, e.g.
-`"background"` continuations run before `"background"` tasks.
+ * On browsers that don't support `scheduler.postTask()`, the same event loop
+   prioritization as the `postTask()` polyfill applies (see above), but
+   continuations run between `"user-blocking"` and `"user-visible"` tasks.
 
 ## Requirements
 
 A browser that supports ES6 is required for this polyfill.
 
 ## Usage
+
+**TODO(shaseley)**: Update this when we figure out the versioning.
 
 ### Include via unpkg
 
