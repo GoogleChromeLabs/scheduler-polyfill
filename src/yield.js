@@ -15,8 +15,15 @@
  */
 
 /**
- * Returns a promise that is resolved in a new task. This uses
- * scheduler.postTask() to schedule continuations.
+ * @fileoverview This version of scheduler.yield() is only used if
+ * self.scheduler is defined. It assumes that this is the native implementation
+ * (i.e. running in an older browser), and it uses scheduler.postTask() to
+ * schedule continuations at 'user-blocking' priority.
+ */
+
+/**
+ * Returns a promise that is resolved in a new task. This schedules
+ * continuations as 'user-blocking' scheduler.postTask() tasks.
  *
  * @return {!Promise<*>}
  */
