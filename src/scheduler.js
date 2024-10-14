@@ -62,22 +62,14 @@ class Scheduler {
   }
 
   /**
-   * Returns a promise that is resolved in a new task. The resulting promise is
-   * rejected if the associated signal is aborted.
+   * Returns a promise that is resolved in a new task.
    *
-   * @param {{signal: AbortSignal, priorty: string}} options
    * @return {!Promise<*>}
    */
-  yield(options) {
-    options = Object.assign({}, options);
+  yield() {
     // Inheritance is not supported. Use default options instead.
-    if (options.signal && options.signal == 'inherit') {
-      delete options.signal;
-    }
-    if (options.priority && options.priority == 'inherit') {
-      options.priority = 'user-visible';
-    }
-    return this.postTaskOrContinuation_(() => {}, options, true);
+    return this.postTaskOrContinuation_(
+        () => {}, {priority: 'user-visible'}, true);
   }
 
   /**
