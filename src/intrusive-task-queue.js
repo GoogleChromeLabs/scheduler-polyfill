@@ -124,24 +124,6 @@ class IntrusiveTaskQueue {
   }
 
   /**
-   * Returns an array containing the elements of this task queue in order. This
-   * is meant to be used for debugging and might be removed.
-   *
-   * TODO(shaseley): consider removing this.
-   *
-   * @return {!Array<!Object>}
-   */
-  toArray() {
-    let node = this.head_;
-    const a = [];
-    while (node !== null) {
-      a.push(node);
-      node = node.tq_next_;
-    }
-    return a;
-  }
-
-  /**
    * Insert `task` into this queue directly after `parentTask`.
    * @private
    * @param {!Object} task The task to insert.
@@ -185,4 +167,21 @@ class IntrusiveTaskQueue {
   }
 }
 
-export {IntrusiveTaskQueue};
+/**
+ * Returns an array containing the elements of this task queue in order. This
+ * is meant to be used for debugging and might be removed.
+ *
+ * @param {IntrusiveTaskQueue} queue
+ * @return {!Array<!Object>}
+ */
+function toArray(queue) {
+  let node = queue.head_;
+  const a = [];
+  while (node !== null) {
+    a.push(node);
+    node = node.tq_next_;
+  }
+  return a;
+}
+
+export {IntrusiveTaskQueue, toArray};
