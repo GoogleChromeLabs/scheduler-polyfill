@@ -27,6 +27,9 @@
   "browserslist": [
     "supports es6-module"
   ],
+  "mangle": {
+    "regex": "_$"
+  },
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "keywords": [
