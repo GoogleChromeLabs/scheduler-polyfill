@@ -36,18 +36,6 @@ export type SchedulerPostTaskOptions = {
 };
 
 /**
- * {@link Scheduler.yield} options.
- *
- * [Explainer reference](https://github.com/WICG/scheduling-apis/blob/main/explainers/yield-and-continuation.md#controlling-continuation-priority-and-abort-behavior)
- */
-export type SchedulerYieldOptions = {
-  /** The priority for the continuation, either a {@link TaskPriority} (`"user-blocking"`, `"user-visible"`, or `"background"`) or `"inherit"` to infer the priority from the current context. If set, this priority is used for the lifetime of the task and priority set on the `signal` is ignored. */
-  priority?: TaskPriority | 'inherit';
-  /** An {@link AbortSignal} or {@link TaskSignal} that can be used to abort or re-prioritize the task (from its associated controller), or `"inherit"` to inherit the current task's signal. The signal's priority is ignored if `priority` is set. */
-  signal?: AbortSignal | TaskSignal | 'inherit';
-};
-
-/**
  * {@link TaskController} options.
  *
  * [MDN Reference](https://developer.mozilla.org/docs/Web/API/TaskController/TaskController#options)
@@ -75,10 +63,11 @@ declare global {
      */
     postTask<T extends unknown>(callback: () => T, options?: SchedulerPostTaskOptions): Promise<T>;
     /**
-     * Returns a promise that yields to the event loop when awaited. Optionally specify a priority and/or a signal for aborting the task.
-     * @param options {@link SchedulerYieldOptions} options.
+     * Returns a promise that yields to the event loop when awaited, allowing continuation in a new task.
+     *
+     * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Scheduler/yield)
      */
-    yield(options?: SchedulerYieldOptions): Promise<void>;
+    yield(): Promise<void>;
   }
 
   /**
