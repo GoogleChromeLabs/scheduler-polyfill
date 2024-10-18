@@ -57,7 +57,7 @@ class PostMessageCallbackMananger {
    * @param {function(): undefined} callback
    * @return {number} A handle that can used for cancellation.
    */
-  queueCallback(callback) {
+  queueCallback_(callback) {
     // We support multiple pending postMessage callbacks by associating a handle
     // with each message, which is used to look up the callback when the message
     // is received.
@@ -70,7 +70,7 @@ class PostMessageCallbackMananger {
   /**
    * @param {number} handle The handle returned when the callback was queued.
    */
-  cancelCallback(handle) {
+  cancelCallback_(handle) {
     delete this.messages_[handle];
   }
 
@@ -161,7 +161,7 @@ class HostCallback {
    * Returns true iff this task was scheduled with MessageChannel.
    * @return {boolean}
    */
-  isMessageChannelCallback() {
+  isMessageChannelCallback_() {
     return this.callbackType_ === CallbackType.POST_MESSAGE;
   }
 
@@ -180,7 +180,7 @@ class HostCallback {
         clearTimeout(this.handle_);
         break;
       case CallbackType.POST_MESSAGE:
-        getPostMessageCallbackManager().cancelCallback(this.handle_);
+        getPostMessageCallbackManager().cancelCallback_(this.handle_);
         break;
       default:
         throw new TypeError('Unknown CallbackType');
@@ -228,7 +228,7 @@ class HostCallback {
       // TODO: Consider using setTimeout in the background so tasks are
       // throttled. One caveat here is that requestIdleCallback may not be
       // throttled.
-      this.handle_ = getPostMessageCallbackManager().queueCallback(() => {
+      this.handle_ = getPostMessageCallbackManager().queueCallback_(() => {
         this.runCallback_();
       });
       return;

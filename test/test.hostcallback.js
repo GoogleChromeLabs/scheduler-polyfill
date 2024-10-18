@@ -72,7 +72,7 @@ describe('HostCallback', function() {
   });
 
 
-  describe('#isMessageChannelCallback()', function() {
+  describe('#isMessageChannelCallback_()', function() {
     let originalMessageChannel = null;
 
     beforeEach(function() {
@@ -87,14 +87,14 @@ describe('HostCallback', function() {
       it(`should use Message channel when avaliable for "${priority}"`,
           function() {
             const hostCallback = new HostCallback(() => {}, priority);
-            expect(hostCallback.isMessageChannelCallback()).to.equal(true);
+            expect(hostCallback.isMessageChannelCallback_()).to.equal(true);
           });
 
       it(`should not use Message channel when not avaliable for "${priority}"`,
           function() {
             window.MessageChannel = null;
             const hostCallback = new HostCallback(() => {}, priority);
-            expect(hostCallback.isMessageChannelCallback()).to.equal(false);
+            expect(hostCallback.isMessageChannelCallback_()).to.equal(false);
           });
     });
   });
