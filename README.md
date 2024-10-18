@@ -54,10 +54,10 @@ A browser that supports ES6 is required for this polyfill.
 ### Include via npm and a bundler
 
 ```console
-npm install scheduler-polyfill@next
+npm install scheduler-polyfill
 ```
 
-Import to populate the task scheduling global variables, if not already
+Import to populate the task-scheduling global variables, if not already
 available in the executing browser:
 
 ```js
