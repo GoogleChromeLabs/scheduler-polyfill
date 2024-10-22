@@ -1,6 +1,6 @@
 {
   "name": "scheduler-polyfill",
-  "version": "1.3.0-beta.0",
+  "version": "1.3.0",
   "description": "Polyfill of self.scheduler API",
   "main": "./dist/scheduler-polyfill.js",
   "module": "./dist/scheduler-polyfill.js",
