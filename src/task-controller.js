@@ -60,46 +60,19 @@ class TaskSignal extends AbortSignal {
  * Makes the TaskSignal instance from the AbortController instance.
  * @private
  * @param {TaskController} controller
- * @param {AbortSignal} abortSignal
- * @return {TaskSignal}
  */
-function makeTaskSignal(controller, abortSignal) {
-  // Create a new object that inherits from TaskSignal.prototype
-  const taskSignal = Object.create(TaskSignal.prototype);
-
-  // Copy the properties from the abortSignal to the taskSignal,
-  // ensure it has proper `this` context.
-  // Otherwise, accessing getters and calling methods will throw an error.
-  let prototype = Object.getPrototypeOf(abortSignal);
-  while (prototype) {
-    const properties = Object.getOwnPropertyNames(prototype);
-    for (const property of properties) {
-      if (property === 'constructor') continue;
-      const descriptor = Object.getOwnPropertyDescriptor(prototype, property);
-      if (descriptor.get) {
-        descriptor.get = descriptor.get.bind(abortSignal);
-      }
-      if (descriptor.set) {
-        descriptor.set = descriptor.set.bind(abortSignal);
-      }
-      if (typeof descriptor.value === 'function') {
-        descriptor.value = descriptor.value.bind(abortSignal);
-      }
-      Object.defineProperty(taskSignal, property, descriptor);
-    }
-    prototype = Object.getPrototypeOf(prototype);
-  }
+function makeTaskSignal(controller) {
+  // Change the prototype of the signal to TaskSignal.prototype.
+  Object.setPrototypeOf(controller.signal, TaskSignal.prototype);
 
   // Connect the priority property to the controller's priority.
-  Object.defineProperty(taskSignal, 'priority', {
+  Object.defineProperty(controller.signal, 'priority', {
     get: function priority() {
       return controller.priority_;
     },
     enumerable: true,
     configurable: true,
   });
-
-  return taskSignal;
 }
 
 /**
@@ -158,14 +131,7 @@ class TaskController extends AbortController {
      */
     this.isPriorityChanging_ = false;
 
-    const taskSignal = makeTaskSignal(this, this.signal);
-    Object.defineProperty(this, 'signal', {
-      get: function signal() {
-        return taskSignal;
-      },
-      configurable: true,
-      enumerable: true,
-    });
+    makeTaskSignal(this);
   }
 
   /**
