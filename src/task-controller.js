@@ -62,7 +62,6 @@ class TaskSignal extends AbortSignal {
  * @param {TaskController} controller
  */
 function makeTaskSignal(controller) {
-  // Change the prototype of the signal to TaskSignal.prototype.
   Object.setPrototypeOf(controller.signal, TaskSignal.prototype);
 
   // Connect the priority property to the controller's priority.
