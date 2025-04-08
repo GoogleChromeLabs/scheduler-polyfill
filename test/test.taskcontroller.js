@@ -163,6 +163,28 @@ describe('TaskSignal', function() {
       expect(signal instanceof EventTarget).to.equal(true);
     });
   });
+
+  describe('works with web apis', function() {
+    it('works with fetch', function(done) {
+      const controller = new TaskController();
+      const signal = controller.signal;
+
+      // the /slow-api endpoint is mocked in karma.conf.js
+      // it will delay the response for 1 second
+      fetch('/slow-api', {signal}).then(() => {
+        assert.ok(false, 'fetch resolved instead of being aborted');
+      }).catch((error) => {
+        expect(error.message).to.equal('Aborted by TaskController.');
+        done();
+      });
+
+      setTimeout(() => {
+        controller.abort(
+            new Error('Aborted by TaskController.'),
+        );
+      }, 10);
+    });
+  });
 });
 
 describe('TaskPriorityChangeEvent', function() {
