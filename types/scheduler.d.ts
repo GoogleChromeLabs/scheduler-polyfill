@@ -19,7 +19,7 @@
  *
  * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Prioritized_Task_Scheduling_API#task_priorities)
  */
-export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
+export type TaskPriority = "user-blocking" | "user-visible" | "background";
 
 /**
  * {@link Scheduler.postTask} options.
@@ -43,7 +43,7 @@ export type SchedulerPostTaskOptions = {
 type TaskControllerOptions = {
   /** The {@link TaskPriority} of the signal associated with this {@link TaskController}. One of `"user-blocking"`, `"user-visible"`, or `"background"`. The default is `"user-visible"`. */
   priority?: TaskPriority;
-}
+};
 
 /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/TaskPriorityChangeEvent/TaskPriorityChangeEvent#options) */
 interface TaskPriorityChangeEventInit extends EventInit {
@@ -61,7 +61,10 @@ declare global {
      *
      * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Scheduler/postTask)
      */
-    postTask<T extends unknown>(callback: () => T, options?: SchedulerPostTaskOptions): Promise<T>;
+    postTask<T extends unknown>(
+      callback: () => T,
+      options?: SchedulerPostTaskOptions
+    ): Promise<T>;
     /**
      * Returns a promise that yields to the event loop when awaited, allowing continuation in a new task.
      *
@@ -119,7 +122,9 @@ declare global {
      *
      * [MDN Reference](https://developer.mozilla.org/docs/Web/API/TaskSignal/prioritychange_event)
      */
-    onprioritychange: (event: TaskPriorityChangeEvent) => void;
+    onprioritychange:
+      | null
+      | ((this: TaskSignal, event: TaskPriorityChangeEvent) => any);
   }
 
   /**
