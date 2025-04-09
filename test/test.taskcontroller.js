@@ -23,7 +23,7 @@ describe('TaskController', function() {
     it('should throw an error if the priority is not valid.', function() {
       try {
         new TaskController('unknown');
-        assert.okay(false);
+        assert.ok(false);
       } catch (e) {
         expect(e.name).to.equal('TypeError');
       }
@@ -89,7 +89,7 @@ describe('TaskController', function() {
       const controller = new TaskController();
       try {
         controller.setPriority('unknown');
-        assert.okay(false);
+        assert.ok(false);
       } catch (e) {
         expect(e.name).to.equal('TypeError');
       }
@@ -128,7 +128,7 @@ describe('TaskSignal', function() {
     it('should throw an error.', function() {
       try {
         new TaskSignal();
-        assert.okay(false);
+        assert.ok(false);
       } catch (e) {
         expect(e.name).to.equal('TypeError');
       }
