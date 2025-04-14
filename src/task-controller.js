@@ -48,7 +48,7 @@ class TaskSignal extends AbortSignal {
   }
 
   /**
-   * The callback to be called when the priority of the task changes.
+   * The callback to be called when the priority of the signal changes.
    * @type {Function}
    */
   get onprioritychange() {
