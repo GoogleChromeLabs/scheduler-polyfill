@@ -23,17 +23,6 @@ import {SCHEDULER_PRIORITIES} from './scheduler-priorities.js';
  */
 class TaskSignal extends AbortSignal {
   /**
-   * Make a TaskSignal instance from a TaskController instance.
-   * @private
-   * @param {TaskController} controller
-   * @param {string} priority
-   */
-  static make_(controller, priority) {
-    Object.setPrototypeOf(controller.signal, TaskSignal.prototype);
-    controller.signal.priority_ = priority;
-  }
-
-  /**
    * The priority of the task, user-visible by default.
    * @readonly
    * @type {string}
@@ -121,7 +110,9 @@ class TaskController extends AbortController {
      */
     this.isPriorityChanging_ = false;
 
-    TaskSignal.make_(this, priority);
+    // Morph the AbortSignal instance into a TaskSignal instance.
+    Object.setPrototypeOf(this.signal, TaskSignal.prototype);
+    this.signal.priority_ = priority;
   }
 
   /**
