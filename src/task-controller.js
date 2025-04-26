@@ -23,12 +23,27 @@ import {SCHEDULER_PRIORITIES} from './scheduler-priorities.js';
  */
 class TaskSignal extends AbortSignal {
   /**
+   * Make a TaskSignal instance from a TaskController instance.
+   * @private
+   * @param {TaskController} controller
+   * @param {string} priority
+   */
+  static make_(controller, priority) {
+    Object.setPrototypeOf(controller.signal, TaskSignal.prototype);
+    controller.signal.priority_ = priority;
+  }
+
+  /**
    * The priority of the task, user-visible by default.
    * @readonly
    * @type {string}
    */
   get priority() {
-    return 'user-visible';
+    /**
+     * @private
+     * @type {string}
+     */
+    return this.priority_;
   }
 
   /**
@@ -54,24 +69,6 @@ class TaskSignal extends AbortSignal {
   get onprioritychange() {
     return this.onprioritychange_ || null;
   }
-}
-
-/**
- * Makes the TaskSignal instance from the AbortController instance.
- * @private
- * @param {TaskController} controller
- */
-function makeTaskSignal(controller) {
-  Object.setPrototypeOf(controller.signal, TaskSignal.prototype);
-
-  // Connect the priority property to the controller's priority.
-  Object.defineProperty(controller.signal, 'priority', {
-    get: function priority() {
-      return controller.priority_;
-    },
-    enumerable: true,
-    configurable: true,
-  });
 }
 
 /**
@@ -120,17 +117,11 @@ class TaskController extends AbortController {
 
     /**
      * @private
-     * @type {string}
-     */
-    this.priority_ = priority;
-
-    /**
-     * @private
      * @type {boolean}
      */
     this.isPriorityChanging_ = false;
 
-    makeTaskSignal(this);
+    TaskSignal.make_(this, priority);
   }
 
   /**
@@ -146,8 +137,8 @@ class TaskController extends AbortController {
 
     this.isPriorityChanging_ = true;
 
-    const previousPriority = this.priority_;
-    this.priority_ = priority;
+    const previousPriority = this.signal.priority_;
+    this.signal.priority_ = priority;
 
     const e = new TaskPriorityChangeEvent('prioritychange', {previousPriority});
     this.signal.dispatchEvent(e);
