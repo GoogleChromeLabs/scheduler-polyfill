@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {Scheduler} from './scheduler.js';
-import {TaskController, TaskPriorityChangeEvent} from './task-controller.js';
+import {TaskController, TaskSignal, TaskPriorityChangeEvent}
+  from './task-controller.js';
 import {schedulerYield} from './yield.js';
 
 if (typeof self.scheduler === 'undefined') {
   self.scheduler = new Scheduler();
   self.TaskController = TaskController;
+  self.TaskSignal = TaskSignal;
   self.TaskPriorityChangeEvent = TaskPriorityChangeEvent;
 } else if (!self.scheduler.yield) {
   self.scheduler.yield = schedulerYield;

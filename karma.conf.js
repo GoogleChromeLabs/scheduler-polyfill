@@ -35,6 +35,12 @@ module.exports = function(config) {
       {pattern: 'test/*.js', type: 'module'},
     ],
 
+    // setup middleware and plugin to mock /slow-api endpoint
+    middleware: [...(config.middleware || []), 'slow-api'],
+    plugins: [
+      ...(config.plugins || []),
+      {'middleware:slow-api': ['factory', SlowAPIMiddlewareFactory]},
+    ],
 
     // list of files / patterns to exclude
     exclude: [
@@ -83,4 +89,23 @@ module.exports = function(config) {
     // how many browser should be started simultaneous
     concurrency: Infinity
   })
+}
+
+/**
+ * Middleware to mock /slow-api endpoint.
+ * We use it to test if TaskSignal works with fetch API.
+ * @return {function}
+ */
+function SlowAPIMiddlewareFactory() {
+  return function(request, response, next) {
+    if (request.url === '/slow-api' && request.method === 'GET') {
+      response.writeHead(200, {'Content-Type': 'text/plain'});
+      setTimeout(() => {
+        response.end('Slow API response');
+        next();
+      }, 1000);
+    } else {
+      next();
+    }
+  };
 }

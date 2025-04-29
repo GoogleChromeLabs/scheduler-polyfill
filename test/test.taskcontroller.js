@@ -15,7 +15,7 @@
  */
 
 import {SCHEDULER_PRIORITIES} from '../src/scheduler-priorities.js';
-import {TaskController, TaskPriorityChangeEvent}
+import {TaskController, TaskSignal, TaskPriorityChangeEvent}
   from '../src/task-controller.js';
 
 describe('TaskController', function() {
@@ -23,7 +23,7 @@ describe('TaskController', function() {
     it('should throw an error if the priority is not valid.', function() {
       try {
         new TaskController('unknown');
-        assert.okay(false);
+        assert.ok(false);
       } catch (e) {
         expect(e.name).to.equal('TypeError');
       }
@@ -48,6 +48,17 @@ describe('TaskController', function() {
       const signal = controller.signal;
       try {
         signal.priority = 'background';
+        assert.ok(false);
+      } catch {
+        assert.ok(true);
+      }
+    });
+
+    it('should have read-only aborted', function() {
+      const controller = new TaskController();
+      const signal = controller.signal;
+      try {
+        signal.aborted = true;
         assert.ok(false);
       } catch {
         assert.ok(true);
@@ -78,7 +89,7 @@ describe('TaskController', function() {
       const controller = new TaskController();
       try {
         controller.setPriority('unknown');
-        assert.okay(false);
+        assert.ok(false);
       } catch (e) {
         expect(e.name).to.equal('TypeError');
       }
@@ -113,6 +124,17 @@ describe('TaskController', function() {
 });
 
 describe('TaskSignal', function() {
+  describe('#constructor', function() {
+    it('should throw an error.', function() {
+      try {
+        new TaskSignal();
+        assert.ok(false);
+      } catch (e) {
+        expect(e.name).to.equal('TypeError');
+      }
+    });
+  });
+
   describe('#onprioritychange', function() {
     it('should return the handler it was set to', function() {
       [function() {}, {}].forEach((handler) => {
@@ -121,6 +143,46 @@ describe('TaskSignal', function() {
         controller.signal.onprioritychange = handler;
         expect(signal.onprioritychange).to.equal(handler);
       });
+    });
+  });
+
+  describe('instanceof', function() {
+    it('should be instanceof TaskSignal', function() {
+      const controller = new TaskController();
+      const signal = controller.signal;
+      expect(signal instanceof TaskSignal).to.equal(true);
+    });
+    it('should be instanceof AbortSignal', function() {
+      const controller = new TaskController();
+      const signal = controller.signal;
+      expect(signal instanceof AbortSignal).to.equal(true);
+    });
+    it('should be instanceof EventTarget', function() {
+      const controller = new TaskController();
+      const signal = controller.signal;
+      expect(signal instanceof EventTarget).to.equal(true);
+    });
+  });
+
+  describe('works with web apis', function() {
+    it('works with fetch', function(done) {
+      const controller = new TaskController();
+      const signal = controller.signal;
+
+      // the /slow-api endpoint is mocked in karma.conf.js
+      // it will delay the response for 1 second
+      fetch('/slow-api', {signal}).then(() => {
+        assert.ok(false, 'fetch resolved instead of being aborted');
+      }).catch((error) => {
+        expect(error.message).to.equal('Aborted by TaskController.');
+        done();
+      });
+
+      setTimeout(() => {
+        controller.abort(
+            new Error('Aborted by TaskController.'),
+        );
+      }, 10);
     });
   });
 });

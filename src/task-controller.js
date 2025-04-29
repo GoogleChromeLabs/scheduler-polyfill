@@ -17,31 +17,47 @@
 import {SCHEDULER_PRIORITIES} from './scheduler-priorities.js';
 
 /**
- * Makes the controller's signal a TaskSignal by adding a read-only priority
- * property.
- * @private
- * @param {TaskController} controller
+ * The TaskSignal interface represents a signal object that allows you to
+ * communicate with a prioritized task, and abort it or change the priority
+ * via a TaskController object.
  */
-function makeTaskSignal(controller) {
-  const signal = controller.signal;
-  Object.defineProperties(signal, {
-    priority: {
-      get: function() {
-        return controller.priority_;
-      },
-      enumerable: true,
-    },
-    onprioritychange: {
-      value: null,
-      writable: true,
-      enumerable: true,
-    },
-  });
-  signal.addEventListener('prioritychange', (e) => {
-    if (signal.onprioritychange) {
-      signal.onprioritychange(e);
+class TaskSignal extends AbortSignal {
+  /**
+   * The priority of the task, user-visible by default.
+   * @readonly
+   * @type {string}
+   */
+  get priority() {
+    /**
+     * @private
+     * @type {string}
+     */
+    return this.priority_;
+  }
+
+  /**
+   * The callback to be called when the priority of the task changes.
+   * @param {Function} callback
+   */
+  set onprioritychange(callback) {
+    if (this.onprioritychange_) {
+      this.removeEventListener('prioritychange', this.onprioritychange_);
     }
-  });
+    this.addEventListener('prioritychange', callback);
+    /**
+     * @private
+     * @type {Function}
+     */
+    this.onprioritychange_ = callback;
+  }
+
+  /**
+   * The callback to be called when the priority of the signal changes.
+   * @type {Function}
+   */
+  get onprioritychange() {
+    return this.onprioritychange_ || null;
+  }
 }
 
 /**
@@ -69,12 +85,6 @@ class TaskPriorityChangeEvent extends Event {
 /**
  * TaskController enables changing the priority of tasks associated with its
  * TaskSignal.
- *
- * Unfortunately, we can't implement TaskSignal by extending AbortSignal because
- * we can't call its constructor. We can't implement a separate TaskSignal class
- * because we need the inheritance so that TaskSignals can be passed to other
- * APIs. We therefore modify the TaskController's underlying AbortSignal, adding
- * the priority property.
  */
 class TaskController extends AbortController {
   /**
@@ -96,17 +106,13 @@ class TaskController extends AbortController {
 
     /**
      * @private
-     * @type {string}
-     */
-    this.priority_ = priority;
-
-    /**
-     * @private
      * @type {boolean}
      */
     this.isPriorityChanging_ = false;
 
-    makeTaskSignal(this);
+    // Morph the AbortSignal instance into a TaskSignal instance.
+    Object.setPrototypeOf(this.signal, TaskSignal.prototype);
+    this.signal.priority_ = priority;
   }
 
   /**
@@ -122,8 +128,8 @@ class TaskController extends AbortController {
 
     this.isPriorityChanging_ = true;
 
-    const previousPriority = this.priority_;
-    this.priority_ = priority;
+    const previousPriority = this.signal.priority_;
+    this.signal.priority_ = priority;
 
     const e = new TaskPriorityChangeEvent('prioritychange', {previousPriority});
     this.signal.dispatchEvent(e);
@@ -132,4 +138,4 @@ class TaskController extends AbortController {
   }
 }
 
-export {TaskController, TaskPriorityChangeEvent};
+export {TaskController, TaskSignal, TaskPriorityChangeEvent};
