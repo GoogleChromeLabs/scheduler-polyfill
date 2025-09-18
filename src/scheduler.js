@@ -79,7 +79,7 @@ class Scheduler {
    * associated signal is aborted.
    *
    * @param {function(): *} callback
-   * @param {{signal: AbortSignal, priorty: string, delay: number}} options
+   * @param {{signal: AbortSignal, priority: string, delay: number}} options
    * @return {!Promise<*>}
    */
   postTask(callback, options) {
@@ -90,7 +90,7 @@ class Scheduler {
    * Common scheduling logic for postTask and yield.
    *
    * @param {function(): *} callback
-   * @param {{signal: AbortSignal, priorty: string, delay: number}} options
+   * @param {{signal: AbortSignal, priority: string, delay: number}} options
    * @param {boolean} isContinuation
    * @return {!Promise<*>}
    */
@@ -243,7 +243,7 @@ class Scheduler {
   }
 
   /**
-   * Callback invoked when a priortychange event is raised for `signal`.
+   * Callback invoked when a prioritychange event is raised for `signal`.
    * @private
    * @param {!AbortSignal} signal
    */
@@ -295,7 +295,7 @@ class Scheduler {
     }
 
     // Either the priority of the new task is compatible with the pending host
-    // callback, or it's a lower priorty (we handled the other case above). In
+    // callback, or it's a lower priority (we handled the other case above). In
     // either case, the pending callback is still valid.
     if (this.pendingHostCallback_) return;
 
