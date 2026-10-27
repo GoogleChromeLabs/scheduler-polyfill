@@ -16,8 +16,181 @@
 
 import {HostCallback} from '../src/host-callback.js';
 import {SCHEDULER_PRIORITIES} from '../src/scheduler-priorities.js';
+import {Scheduler} from '../src/scheduler.js';
 
 describe('HostCallback', function() {
+  describe('MessagePort references', function() {
+    let refDescriptor;
+    let unrefDescriptor;
+    let receiver;
+    let referenced;
+    let references;
+    let releases;
+
+    beforeEach(async function() {
+      // Drain the shared broker before instrumenting its native receiver.
+      await new Promise((resolve) => {
+        new HostCallback(resolve, 'user-visible');
+      });
+      refDescriptor = Object.getOwnPropertyDescriptor(MessagePort.prototype,
+          'ref');
+      unrefDescriptor = Object.getOwnPropertyDescriptor(MessagePort.prototype,
+          'unref');
+      receiver = null;
+      referenced = false;
+      references = 0;
+      releases = 0;
+      Object.defineProperty(MessagePort.prototype, 'ref', {
+        configurable: true,
+        value: function() {
+          receiver = this;
+          referenced = true;
+          references++;
+        },
+      });
+      Object.defineProperty(MessagePort.prototype, 'unref', {
+        configurable: true,
+        value: function() {
+          referenced = false;
+          releases++;
+        },
+      });
+    });
+
+    afterEach(async function() {
+      try {
+        await new Promise((resolve) => {
+          new HostCallback(resolve, 'user-visible');
+        });
+      } finally {
+        if (refDescriptor) {
+          Object.defineProperty(MessagePort.prototype, 'ref', refDescriptor);
+        } else {
+          delete MessagePort.prototype.ref;
+        }
+        if (unrefDescriptor) {
+          Object.defineProperty(
+              MessagePort.prototype, 'unref', unrefDescriptor);
+        } else {
+          delete MessagePort.prototype.unref;
+        }
+      }
+    });
+
+    it('should not reference a port when only constructing a scheduler',
+        function() {
+          new Scheduler();
+          expect(references).to.equal(0);
+        });
+
+    it('should release the receiver when its last callback is dispatched',
+        async function() {
+          const completed = new Promise((resolve) => {
+            new HostCallback(() => resolve(referenced), 'user-visible');
+          });
+          expect(referenced).to.equal(true);
+          expect(await completed).to.equal(false);
+          expect(releases).to.equal(1);
+        });
+
+    it('should release the receiver when the last callback is cancelled',
+        function() {
+          const callback = new HostCallback(() => {
+            throw new Error('Cancelled callback ran');
+          }, 'user-visible');
+          expect(referenced).to.equal(true);
+          callback.cancel();
+          expect(referenced).to.equal(false);
+          callback.cancel();
+          expect(releases).to.equal(1);
+        });
+
+    it('should keep the receiver referenced for other pending callbacks',
+        async function() {
+          const cancelled = new HostCallback(() => {
+            throw new Error('Cancelled callback ran');
+          }, 'user-visible');
+          const completed = new Promise((resolve) => {
+            new HostCallback(() => resolve(referenced), 'user-visible');
+          });
+          cancelled.cancel();
+          expect(referenced).to.equal(true);
+          expect(releases).to.equal(0);
+          // The cancelled message arrives first but must not release live work.
+          expect(await completed).to.equal(false);
+          expect(releases).to.equal(1);
+        });
+
+    it('should reactivate after cancellation despite stale messages',
+        async function() {
+          const cancelled = new HostCallback(() => {
+            throw new Error('Cancelled callback ran');
+          }, 'user-visible');
+          cancelled.cancel();
+          const completed = new Promise((resolve) => {
+            new HostCallback(() => resolve(releases), 'user-visible');
+          });
+          expect(referenced).to.equal(true);
+          expect(await completed).to.equal(2);
+          expect(referenced).to.equal(false);
+        });
+
+    it('should reactivate when a callback queues more work', async function() {
+      let referencedDuringCallback;
+      let referencedAfterQueueing;
+      const completed = new Promise((resolve) => {
+        new HostCallback(() => {
+          referencedDuringCallback = referenced;
+          new HostCallback(() => resolve(referenced), 'user-visible');
+          referencedAfterQueueing = referenced;
+        }, 'user-visible');
+      });
+      expect(await completed).to.equal(false);
+      expect(referencedDuringCallback).to.equal(false);
+      expect(referencedAfterQueueing).to.equal(true);
+      expect(releases).to.equal(2);
+    });
+
+    it('should reactivate after draining', async function() {
+      await new Promise((resolve) => new HostCallback(resolve, 'user-visible'));
+      expect(referenced).to.equal(false);
+      const completed = new Promise((resolve) => {
+        new HostCallback(resolve, 'user-visible');
+      });
+      expect(referenced).to.equal(true);
+      await completed;
+      expect(referenced).to.equal(false);
+      expect(releases).to.equal(2);
+    });
+
+    it('should share references between schedulers', async function() {
+      const first = new Scheduler();
+      const second = new Scheduler();
+      const firstTask = first.postTask(() => referenced);
+      const secondTask = second.postTask(() => referenced);
+      expect(referenced).to.equal(true);
+      const results = await Promise.all([firstTask, secondTask]);
+      expect(results).to.deep.equal([true, false]);
+      expect(releases).to.equal(1);
+    });
+
+    it('should release before propagating an exception', async function() {
+      const callback = new HostCallback(() => {
+        throw new Error('Expected callback failure');
+      }, 'user-visible');
+      // Dispatch synchronously to observe the exception without an uncaught
+      // browser error. The native posted message will subsequently be stale.
+      expect(() => receiver.onmessage(new MessageEvent('message', {
+        data: callback.handle_,
+      }))).to.throw('Expected callback failure');
+      expect(referenced).to.equal(false);
+      expect(releases).to.equal(1);
+      await new Promise((resolve) => new HostCallback(resolve, 'user-visible'));
+      expect(referenced).to.equal(false);
+      expect(releases).to.equal(2);
+    });
+  });
+
   describe('#schedule_()', function() {
     const testConfigs = [
       {delay: 0},
