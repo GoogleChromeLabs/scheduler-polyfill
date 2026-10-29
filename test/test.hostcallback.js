@@ -93,10 +93,10 @@ describe('HostCallback', function() {
           expect(releases).to.equal(1);
         });
 
-    it('should release the receiver when the last callback is cancelled',
+    it('should release the receiver when the last callback is canceled',
         function() {
           const callback = new HostCallback(() => {
-            throw new Error('Cancelled callback ran');
+            throw new Error('Canceled callback ran');
           }, 'user-visible');
           expect(referenced).to.equal(true);
           callback.cancel();
@@ -107,26 +107,26 @@ describe('HostCallback', function() {
 
     it('should keep the receiver referenced for other pending callbacks',
         async function() {
-          const cancelled = new HostCallback(() => {
-            throw new Error('Cancelled callback ran');
+          const canceled = new HostCallback(() => {
+            throw new Error('Canceled callback ran');
           }, 'user-visible');
           const completed = new Promise((resolve) => {
             new HostCallback(() => resolve(referenced), 'user-visible');
           });
-          cancelled.cancel();
+          canceled.cancel();
           expect(referenced).to.equal(true);
           expect(releases).to.equal(0);
-          // The cancelled message arrives first but must not release live work.
+          // The canceled message arrives first but must not release live work.
           expect(await completed).to.equal(false);
           expect(releases).to.equal(1);
         });
 
     it('should reactivate after cancellation despite stale messages',
         async function() {
-          const cancelled = new HostCallback(() => {
-            throw new Error('Cancelled callback ran');
+          const canceled = new HostCallback(() => {
+            throw new Error('Canceled callback ran');
           }, 'user-visible');
-          cancelled.cancel();
+          canceled.cancel();
           const completed = new Promise((resolve) => {
             new HostCallback(() => resolve(releases), 'user-visible');
           });
