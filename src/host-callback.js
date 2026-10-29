@@ -40,9 +40,9 @@ class PostMessageCallbackMananger {
 
     /**
      * @private
-     * @const {!Object<number, function(): undefined>}
+     * @const {!Map<number, function(): undefined>}
      */
-    this.messages_ = {};
+    this.messages_ = new Map();
 
     /**
      * @private
@@ -62,7 +62,13 @@ class PostMessageCallbackMananger {
     // with each message, which is used to look up the callback when the message
     // is received.
     const handle = this.nextMessageHandle_++;
-    this.messages_[handle] = callback;
+    // Some runtimes expose port references that keep the event loop alive.
+    // Keep the receiver referenced while callbacks are pending.
+    if (this.messages_.size === 0 &&
+        typeof this.channel_.port1.ref === 'function') {
+      this.channel_.port1.ref();
+    }
+    this.messages_.set(handle, callback);
     this.sendPort_.postMessage(handle);
     return handle;
   }
@@ -71,7 +77,11 @@ class PostMessageCallbackMananger {
    * @param {number} handle The handle returned when the callback was queued.
    */
   cancelCallback_(handle) {
-    delete this.messages_[handle];
+    if (!this.messages_.delete(handle)) return;
+    if (this.messages_.size === 0 &&
+        typeof this.channel_.port1.unref === 'function') {
+      this.channel_.port1.unref();
+    }
   }
 
   /**
@@ -82,9 +92,10 @@ class PostMessageCallbackMananger {
   onMessageReceived_(e) {
     const handle = e.data;
     // The handle will have been removed if the callback was canceled.
-    if (!(handle in this.messages_)) return;
-    const callback = this.messages_[handle];
-    delete this.messages_[handle];
+    const callback = this.messages_.get(handle);
+    if (!callback) return;
+    // Release before invoking user code, which may throw or queue more work.
+    this.cancelCallback_(handle);
     callback();
   }
 }
