@@ -113,6 +113,7 @@ describe('HostCallback', function() {
           const completed = new Promise((resolve) => {
             new HostCallback(() => resolve(referenced), 'user-visible');
           });
+          expect(references).to.equal(1);
           canceled.cancel();
           expect(referenced).to.equal(true);
           expect(releases).to.equal(0);

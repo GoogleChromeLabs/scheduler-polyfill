@@ -62,12 +62,13 @@ class PostMessageCallbackMananger {
     // with each message, which is used to look up the callback when the message
     // is received.
     const handle = this.nextMessageHandle_++;
-    this.messages_.set(handle, callback);
     // Some runtimes expose port references that keep the event loop alive.
     // Keep the receiver referenced while callbacks are pending.
-    if (typeof this.channel_.port1.ref === 'function') {
+    if (this.messages_.size === 0 &&
+        typeof this.channel_.port1.ref === 'function') {
       this.channel_.port1.ref();
     }
+    this.messages_.set(handle, callback);
     this.sendPort_.postMessage(handle);
     return handle;
   }
@@ -91,8 +92,8 @@ class PostMessageCallbackMananger {
   onMessageReceived_(e) {
     const handle = e.data;
     // The handle will have been removed if the callback was canceled.
-    if (!this.messages_.has(handle)) return;
     const callback = this.messages_.get(handle);
+    if (!callback) return;
     // Release before invoking user code, which may throw or queue more work.
     this.cancelCallback_(handle);
     callback();
