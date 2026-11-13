@@ -327,6 +327,34 @@ describe('Scheduler', function() {
         expect(result).to.equal(test.expectedOrder);
       });
     });
+
+    ['user-visible', 'user-blocking'].forEach((targetPriority) => {
+      it(`should upgrade the host callback when priority increases from ` +
+          `background to ${targetPriority}`, async function() {
+        const originalRequestIdleCallback = window.requestIdleCallback;
+        const originalCancelIdleCallback = window.cancelIdleCallback;
+        let canceledHandle = null;
+        window.requestIdleCallback = () => 42;
+        window.cancelIdleCallback = (handle) => {
+          canceledHandle = handle;
+        };
+
+        try {
+          const scheduler = new Scheduler();
+          const controller = new TaskController({priority: 'background'});
+          const p = scheduler.postTask(() => 'upgraded', {
+            signal: controller.signal,
+          });
+
+          controller.setPriority(targetPriority);
+          expect(canceledHandle).to.equal(42);
+          expect(await p).to.equal('upgraded');
+        } finally {
+          window.requestIdleCallback = originalRequestIdleCallback;
+          window.cancelIdleCallback = originalCancelIdleCallback;
+        }
+      });
+    });
   });
 
   it('should convert strings to numbers for postTask delay.', async function() {
