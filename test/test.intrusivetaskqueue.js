@@ -214,5 +214,48 @@ describe('IntrusiveTaskQueue', function() {
       expect(destinationQueue2.takeNextTask().id).to.equal(8);
       expect(destinationQueue2.isEmpty()).to.equal(true);
     });
+
+    it('should preserve original task order across round-trip merges',
+        function() {
+          const queueA = new IntrusiveTaskQueue();
+          const queueB = new IntrusiveTaskQueue();
+
+          // Push an older task into queueB so merging task 2 into queueB
+          // appends at the non-empty tail, and also test merging into an empty
+          // queueC.
+          queueB.push({id: 0});
+          queueA.push({id: 1, moveToC: true});
+          queueA.push({id: 2, moveToB: true});
+          queueA.push({id: 3});
+
+          const queueC = new IntrusiveTaskQueue();
+          queueC.merge(queueA, (task) => Boolean(task.moveToC));
+          queueB.merge(queueA, (task) => Boolean(task.moveToB));
+
+          queueA.merge(queueC, () => true);
+          queueA.merge(queueB, (task) => Boolean(task.moveToB));
+
+          expect(queueA.takeNextTask().id).to.equal(1);
+          expect(queueA.takeNextTask().id).to.equal(2);
+          expect(queueA.takeNextTask().id).to.equal(3);
+          expect(queueA.isEmpty()).to.equal(true);
+        });
+
+    it('should preserve posting order when two queues merge into a third',
+        function() {
+          const queueA = new IntrusiveTaskQueue();
+          const queueB = new IntrusiveTaskQueue();
+          const queueC = new IntrusiveTaskQueue();
+
+          queueA.push({id: 1});
+          queueB.push({id: 2});
+
+          queueC.merge(queueA, () => true);
+          queueC.merge(queueB, () => true);
+
+          expect(queueC.takeNextTask().id).to.equal(1);
+          expect(queueC.takeNextTask().id).to.equal(2);
+          expect(queueC.isEmpty()).to.equal(true);
+        });
   });
 });
