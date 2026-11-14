@@ -189,21 +189,24 @@ describe('TaskSignal', function() {
 
 describe('TaskPriorityChangeEvent', function() {
   describe('#constructor', function() {
-    it('should throw an error on invalid arguments', async function() {
+    it('should throw an error on invalid arguments', function() {
       [
         [],
         [''],
+        ['', undefined],
+        ['', null],
         ['', {}],
         ['', 'init'],
         ['', {previousPriority: null}],
         ['', {previousPriority: ''}],
         ['', {previousPriority: 1}],
-      ].forEach(async (args) => {
+      ].forEach((args) => {
         try {
           new TaskPriorityChangeEvent(...args);
           assert.ok(false);
         } catch (e) {
           expect(e.name).to.equal('TypeError');
+          expect(e.message).to.include('Invalid task priority:');
         }
       });
     });
