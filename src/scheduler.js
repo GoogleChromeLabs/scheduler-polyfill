@@ -266,6 +266,7 @@ class Scheduler {
     }
 
     this.signals_.set(signal, signal.priority);
+    this.scheduleHostCallbackIfNeeded_();
   }
 
   /**
