@@ -75,7 +75,8 @@ class TaskPriorityChangeEvent extends Event {
    */
   constructor(typeArg, init) {
     if (!init || !SCHEDULER_PRIORITIES.includes(init.previousPriority)) {
-      throw new TypeError(`Invalid task priority: '${init.previousPriority}'`);
+      throw new TypeError(
+          `Invalid task priority: '${init && init.previousPriority}'`);
     }
     super(typeArg);
     this.previousPriority = init.previousPriority;
