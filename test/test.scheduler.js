@@ -355,6 +355,54 @@ describe('Scheduler', function() {
         }
       });
     });
+
+    it('should preserve posting order across round-trip priority changes',
+        async function() {
+          const scheduler = new Scheduler();
+          const controller = new TaskController({priority: 'user-visible'});
+          let result = '';
+
+          const promises = [
+            scheduler.postTask(() => {
+              result += '1';
+            }, {signal: controller.signal}),
+            scheduler.postTask(() => {
+              result += '2';
+            }, {priority: 'user-visible'}),
+            scheduler.postTask(() => {
+              result += '3';
+            }, {signal: controller.signal}),
+          ];
+
+          controller.setPriority('background');
+          controller.setPriority('user-visible');
+
+          await Promise.all(promises);
+          expect(result).to.equal('123');
+        });
+
+    it('should preserve posting order when multiple signals change to the ' +
+        'same priority', async function() {
+      const scheduler = new Scheduler();
+      const controller1 = new TaskController({priority: 'user-visible'});
+      const controller2 = new TaskController({priority: 'user-blocking'});
+      let result = '';
+
+      const promises = [
+        scheduler.postTask(() => {
+          result += '1';
+        }, {signal: controller1.signal}),
+        scheduler.postTask(() => {
+          result += '2';
+        }, {signal: controller2.signal}),
+      ];
+
+      controller1.setPriority('background');
+      controller2.setPriority('background');
+
+      await Promise.all(promises);
+      expect(result).to.equal('12');
+    });
   });
 
   it('should convert strings to numbers for postTask delay.', async function() {

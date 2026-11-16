@@ -63,17 +63,7 @@ class IntrusiveTaskQueue {
     if (typeof task !== 'object') throw new TypeError('Task must be an Object');
 
     task.tq_sequence_ = nextSequence++;
-
-    if (this.isEmpty()) {
-      task.tq_prev_ = null;
-      this.head_ = task;
-    } else {
-      task.tq_prev_ = this.tail_;
-      this.tail_.tq_next_ = task;
-    }
-
-    task.tq_next_ = null;
-    this.tail_ = task;
+    this.insert_(task, this.tail_);
   }
 
   /** @return {?Object} The oldest task or null of the queue is empty. */
@@ -131,22 +121,19 @@ class IntrusiveTaskQueue {
    *    null if `task` should be inserted at the beginning.
    */
   insert_(task, parentTask) {
-    // We can simply push the new task if it belongs at the end.
-    if (parentTask == this.tail_) {
-      this.push(task);
-      return;
-    }
-
-    // `nextTask` is the next task in the list, which should not be null since
-    // `parentTask` is not the tail (which is the only task with a null next
-    // pointer).
+    // `nextTask` is the next task in the list, which will be null iff
+    // `parentTask` is the tail (either the queue is empty or `task` is being
+    // inserted at the end).
     const nextTask = parentTask ? parentTask.tq_next_ : this.head_;
 
     task.tq_next_ = nextTask;
-    nextTask.tq_prev_ = task;
+    if (nextTask != null) {
+      nextTask.tq_prev_ = task;
+    } else {
+      this.tail_ = task;
+    }
 
     task.tq_prev_ = parentTask;
-
     if (parentTask != null) {
       parentTask.tq_next_ = task;
     } else {
